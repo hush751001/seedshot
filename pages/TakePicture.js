@@ -15,59 +15,6 @@ import Marker from "react-native-image-marker"
 import { PermissionsAndroid, Platform } from "react-native";
 import RNFS from 'react-native-fs';
 
-async function hasAndroidPermission() {
-  const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
-  const hasPermission = await PermissionsAndroid.check(permission);
-
-  if (hasPermission) {
-    return true;
-  }
-
-  const status = await PermissionsAndroid.request(permission);
-  return status === 'granted';
-}
-
-async function savePicture(uri, exif) {
-  if (Platform.OS === "android" && !(await hasAndroidPermission())) {
-    return;
-  }
-
-  console.log(`${RNFS.ExternalStorageDirectoryPath}`);
-
-  // TODO: 폴더명는 현재 선택된 앨범명으로 처리, 파일명도 자동증가 처리
-  let folderName = '옥수수';
-  let fileName = `test_${(new Date()).getTime()}.jpg`;
-  const folderPath = `${RNFS.ExternalStorageDirectoryPath}/SeedShot/${folderName}`;
-
-  const res = await Marker.markText({
-    src: uri,
-    text: `${folderName}/test_${(new Date()).getTime()}.jpg`,
-    X: 0,
-    Y: 0,
-    color: '#FF0000',
-    fontSize: 80,
-    shadowStyle: {
-      dx: 10.5,
-      dy: 20.8,
-      radius: 20.9,
-      color: '#ff00ff'
-    },
-    textBackgroundStyle: {
-      type: 'stretchX',
-      paddingX: 20,
-      paddingY: 20,
-      color: '#00ff00'
-    },
-    scale: 1,
-    quality: 100
-  });
-
-  console.log(res);
-
-  await RNFS.mkdir(folderPath);
-  RNFS.moveFile(res, `${folderPath}/${fileName}`);
-};
-
 const flashModeOrder = {
   off: 'on',
   on: 'auto',
@@ -162,8 +109,60 @@ export default class CameraScreen extends React.Component {
         exif: true,
       });
       console.warn('takePicture ', data);
-      savePicture(data.uri, data.exif);
+      this.savePicture(data.uri, data.exif);
     }
+  };
+
+
+  async hasAndroidPermission() {
+    const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+    const hasPermission = await PermissionsAndroid.check(permission);
+
+    if (hasPermission) {
+      return true;
+    }
+
+    const status = await PermissionsAndroid.request(permission);
+    return status === 'granted';
+  }
+
+  async savePicture(uri, exif) {
+    if (Platform.OS === "android" && !(await this.hasAndroidPermission())) {
+      return;
+    }
+
+    // TODO: 폴더명는 현재 선택된 앨범명으로 처리, 파일명도 자동증가 처리
+    const { folderName } = this.props.route.params;
+    let fileName = `${(new Date()).getTime()}.jpg`;
+    const folderPath = `${RNFS.ExternalStorageDirectoryPath}/SeedShot/${folderName}`;
+
+    const res = await Marker.markText({
+      src: uri,
+      text: `${folderName}/${(new Date()).getTime()}.jpg`,
+      X: 0,
+      Y: 0,
+      color: '#FF0000',
+      fontSize: 80,
+      shadowStyle: {
+        dx: 10.5,
+        dy: 20.8,
+        radius: 20.9,
+        color: '#ff00ff'
+      },
+      textBackgroundStyle: {
+        type: 'stretchX',
+        paddingX: 20,
+        paddingY: 20,
+        color: '#00ff00'
+      },
+      scale: 1,
+      quality: 100
+    });
+
+    console.log(res);
+
+    await RNFS.mkdir(folderPath);
+    RNFS.moveFile(res, `${folderPath}/${fileName}`);
   };
 
   renderCamera() {
