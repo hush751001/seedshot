@@ -13,3 +13,11 @@
 
 # 화면 설계서
 
+![slide1](./docs/slide1.JPG)
+![slide2](./docs/slide2.JPG)
+![slide3](./docs/slide3.JPG)
+![slide4](./docs/slide4.JPG)
+![slide5](./docs/slide5.JPG)
+![slide6](./docs/slide6.JPG)
+![slide7](./docs/slide7.JPG)
+
