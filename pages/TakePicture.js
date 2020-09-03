@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 // eslint-disable-next-line import/no-unresolved
 import { RNCamera } from 'react-native-camera';
+import Marker from "react-native-image-marker"
 import { PermissionsAndroid, Platform } from "react-native";
 import RNFS from 'react-native-fs';
 
@@ -26,7 +27,7 @@ async function hasAndroidPermission() {
   return status === 'granted';
 }
 
-async function savePicture(uri) {
+async function savePicture(uri, exif) {
   if (Platform.OS === "android" && !(await hasAndroidPermission())) {
     return;
   }
@@ -38,8 +39,33 @@ async function savePicture(uri) {
   let fileName = `test_${(new Date()).getTime()}.jpg`;
   const folderPath = `${RNFS.ExternalStorageDirectoryPath}/SeedShot/${folderName}`;
 
+  const res = await Marker.markText({
+    src: uri,
+    text: `${folderName}/test_${(new Date()).getTime()}.jpg`,
+    X: 0,
+    Y: 0,
+    color: '#FF0000',
+    fontSize: 80,
+    shadowStyle: {
+      dx: 10.5,
+      dy: 20.8,
+      radius: 20.9,
+      color: '#ff00ff'
+    },
+    textBackgroundStyle: {
+      type: 'stretchX',
+      paddingX: 20,
+      paddingY: 20,
+      color: '#00ff00'
+    },
+    scale: 1,
+    quality: 100
+  });
+
+  console.log(res);
+
   await RNFS.mkdir(folderPath);
-  RNFS.moveFile(uri, `${folderPath}/${fileName}`);
+  RNFS.moveFile(res, `${folderPath}/${fileName}`);
 };
 
 const flashModeOrder = {
@@ -132,9 +158,11 @@ export default class CameraScreen extends React.Component {
 
   takePicture = async function() {
     if (this.camera) {
-      const data = await this.camera.takePictureAsync();
+      const data = await this.camera.takePictureAsync({
+        exif: true,
+      });
       console.warn('takePicture ', data);
-      savePicture(data.uri);
+      savePicture(data.uri, data.exif);
     }
   };
 
