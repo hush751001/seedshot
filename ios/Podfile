@@ -10,8 +10,6 @@ target 'SeedShot' do
 
   pod 'react-native-camera', :path => '../node_modules/react-native-camera'
 
-  pod 'react-native-cameraroll', :path => '../node_modules/@react-native-community/cameraroll'
-
   pod 'RNFS', :path => '../node_modules/react-native-fs'
 
   target 'SeedShotTests' do
