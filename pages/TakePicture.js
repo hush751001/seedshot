@@ -1,6 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
 
-
 import React from 'react';
 import {
   StyleSheet,
@@ -12,7 +11,6 @@ import {
 } from 'react-native';
 import {RNCamera} from 'react-native-camera';
 import Marker from 'react-native-image-marker';
-import {PermissionsAndroid, Platform} from 'react-native';
 import RNFS from 'react-native-fs';
 
 const flashModeOrder = {
@@ -111,46 +109,31 @@ export default class CameraScreen extends React.Component {
     }
   };
 
-  async hasAndroidPermission() {
-    const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
-    const hasPermission = await PermissionsAndroid.check(permission);
-
-    if (hasPermission) {
-      return true;
-    }
-
-    const status = await PermissionsAndroid.request(permission);
-    return status === 'granted';
-  }
-
   async savePicture(uri, exif) {
-    if (Platform.OS === 'android' && !(await this.hasAndroidPermission())) {
-      return;
-    }
-
     // TODO: 폴더명는 현재 선택된 앨범명으로 처리, 파일명도 자동증가 처리
     const {folderName} = this.props.route.params;
     let fileName = `${new Date().getTime()}.jpg`;
     const folderPath = `${RNFS.ExternalStorageDirectoryPath}/SeedShot/${folderName}`;
 
+    
+    const todayDate = new Date();
+    const todayYYYYMMDD =
+      todayDate.getFullYear() +
+      String(todayDate.getMonth() + 1).padStart(2, '0') +
+      String(todayDate.getDate()).padStart(2, '0');
+
     const res = await Marker.markText({
       src: uri,
-      text: `${folderName}/${new Date().getTime()}.jpg`,
+      text: `${folderName}/${new Date().getTime()} - ${todayYYYYMMDD}`,
       X: 0,
       Y: 0,
-      color: '#FF0000',
+      color: '#fff',
       fontSize: 80,
-      shadowStyle: {
-        dx: 10.5,
-        dy: 20.8,
-        radius: 20.9,
-        color: '#ff00ff',
-      },
       textBackgroundStyle: {
         type: 'stretchX',
         paddingX: 20,
         paddingY: 20,
-        color: '#00ff00',
+        color: '#000',
       },
       scale: 1,
       quality: 100,
