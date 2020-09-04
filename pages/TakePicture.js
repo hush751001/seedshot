@@ -1,18 +1,18 @@
-/* eslint-disable no-console */
+/* eslint-disable react-native/no-inline-styles */
+
+
 import React from 'react';
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
-  Slider,
   TouchableWithoutFeedback,
   Dimensions,
 } from 'react-native';
-// eslint-disable-next-line import/no-unresolved
-import { RNCamera } from 'react-native-camera';
-import Marker from "react-native-image-marker"
-import { PermissionsAndroid, Platform } from "react-native";
+import {RNCamera} from 'react-native-camera';
+import Marker from 'react-native-image-marker';
+import {PermissionsAndroid, Platform} from 'react-native';
 import RNFS from 'react-native-fs';
 
 const flashModeOrder = {
@@ -31,15 +31,13 @@ const wbOrder = {
   incandescent: 'auto',
 };
 
-const landmarkSize = 2;
-
 export default class CameraScreen extends React.Component {
   state = {
     flash: 'off',
     zoom: 0,
     autoFocus: 'on',
     autoFocusPoint: {
-      normalized: { x: 0.5, y: 0.5 }, // normalized values required for autoFocusPointOfInterest
+      normalized: {x: 0.5, y: 0.5}, // normalized values required for autoFocusPointOfInterest
       drawRectPosition: {
         x: Dimensions.get('window').width * 0.5 - 32,
         y: Dimensions.get('window').height * 0.5 - 32,
@@ -70,7 +68,7 @@ export default class CameraScreen extends React.Component {
   }
 
   touchToFocus(event) {
-    const { pageX, pageY } = event.nativeEvent;
+    const {pageX, pageY} = event.nativeEvent;
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
     const isPortrait = screenHeight > screenWidth;
@@ -85,25 +83,25 @@ export default class CameraScreen extends React.Component {
 
     this.setState({
       autoFocusPoint: {
-        normalized: { x, y },
-        drawRectPosition: { x: pageX, y: pageY },
+        normalized: {x, y},
+        drawRectPosition: {x: pageX, y: pageY},
       },
     });
   }
 
   zoomOut() {
     this.setState({
-      zoom: Math.max(this.state.zoom - 1, 0)
+      zoom: Math.max(this.state.zoom - 1, 0),
     });
   }
 
   zoomIn() {
     this.setState({
-      zoom: Math.min(this.state.zoom + 1, 10)
+      zoom: Math.min(this.state.zoom + 1, 10),
     });
   }
 
-  takePicture = async function() {
+  takePicture = async function () {
     if (this.camera) {
       const data = await this.camera.takePictureAsync({
         exif: true,
@@ -112,7 +110,6 @@ export default class CameraScreen extends React.Component {
       this.savePicture(data.uri, data.exif);
     }
   };
-
 
   async hasAndroidPermission() {
     const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
@@ -127,18 +124,18 @@ export default class CameraScreen extends React.Component {
   }
 
   async savePicture(uri, exif) {
-    if (Platform.OS === "android" && !(await this.hasAndroidPermission())) {
+    if (Platform.OS === 'android' && !(await this.hasAndroidPermission())) {
       return;
     }
 
     // TODO: 폴더명는 현재 선택된 앨범명으로 처리, 파일명도 자동증가 처리
-    const { folderName } = this.props.route.params;
-    let fileName = `${(new Date()).getTime()}.jpg`;
+    const {folderName} = this.props.route.params;
+    let fileName = `${new Date().getTime()}.jpg`;
     const folderPath = `${RNFS.ExternalStorageDirectoryPath}/SeedShot/${folderName}`;
 
     const res = await Marker.markText({
       src: uri,
-      text: `${folderName}/${(new Date()).getTime()}.jpg`,
+      text: `${folderName}/${new Date().getTime()}.jpg`,
       X: 0,
       Y: 0,
       color: '#FF0000',
@@ -147,23 +144,23 @@ export default class CameraScreen extends React.Component {
         dx: 10.5,
         dy: 20.8,
         radius: 20.9,
-        color: '#ff00ff'
+        color: '#ff00ff',
       },
       textBackgroundStyle: {
         type: 'stretchX',
         paddingX: 20,
         paddingY: 20,
-        color: '#00ff00'
+        color: '#00ff00',
       },
       scale: 1,
-      quality: 100
+      quality: 100,
     });
 
     console.log(res);
 
     await RNFS.mkdir(folderPath);
     RNFS.moveFile(res, `${folderPath}/${fileName}`);
-  };
+  }
 
   renderCamera() {
     const drawFocusRingPosition = {
@@ -172,13 +169,10 @@ export default class CameraScreen extends React.Component {
     };
     return (
       <RNCamera
-        ref={ref => {
+        ref={(ref) => {
           this.camera = ref;
         }}
-        style={{
-          flex: 1,
-          justifyContent: 'space-between',
-        }}
+        style={{flex: 1, justifyContent: 'space-between'}}
         type={this.state.type}
         flashMode={this.state.flash}
         autoFocus={this.state.autoFocus}
@@ -192,12 +186,11 @@ export default class CameraScreen extends React.Component {
           message: 'We need your permission to use your camera',
           buttonPositive: 'Ok',
           buttonNegative: 'Cancel',
-        }}
-      >
+        }}>
         <View style={StyleSheet.absoluteFill}>
           <View style={[styles.autoFocusBox, drawFocusRingPosition]} />
           <TouchableWithoutFeedback onPress={this.touchToFocus.bind(this)}>
-            <View style={{ flex: 1 }} />
+            <View style={{flex: 1}} />
           </TouchableWithoutFeedback>
         </View>
         <View
@@ -207,21 +200,28 @@ export default class CameraScreen extends React.Component {
             backgroundColor: 'transparent',
             flexDirection: 'row',
             justifyContent: 'space-around',
-          }}
-        >
-          <TouchableOpacity style={styles.flipButton} onPress={this.toggleFacing.bind(this)}>
+          }}>
+          <TouchableOpacity
+            style={styles.flipButton}
+            onPress={this.toggleFacing.bind(this)}>
             <Text style={styles.flipText}> FLIP </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.flipButton} onPress={this.toggleFlash.bind(this)}>
+          <TouchableOpacity
+            style={styles.flipButton}
+            onPress={this.toggleFlash.bind(this)}>
             <Text style={styles.flipText}> FLASH: {this.state.flash} </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.flipButton} onPress={this.toggleWB.bind(this)}>
+          <TouchableOpacity
+            style={styles.flipButton}
+            onPress={this.toggleWB.bind(this)}>
             <Text style={styles.flipText}> WB: {this.state.whiteBalance} </Text>
           </TouchableOpacity>
         </View>
-        <View style={{ bottom: 0 }}>
+        <View style={{bottom: 0}}>
           {this.state.zoom !== 0 && (
-            <Text style={[styles.flipText, styles.zoomText]}>Zoom: {this.state.zoom}</Text>
+            <Text style={[styles.flipText, styles.zoomText]}>
+              Zoom: {this.state.zoom}
+            </Text>
           )}
           <View
             style={{
@@ -229,24 +229,24 @@ export default class CameraScreen extends React.Component {
               backgroundColor: 'transparent',
               flexDirection: 'row',
               alignSelf: 'flex-end',
-            }}
-          >
+            }}>
             <TouchableOpacity
-              style={[styles.flipButton, { flex: 0.1, alignSelf: 'flex-end' }]}
-              onPress={this.zoomIn.bind(this)}
-            >
+              style={[styles.flipButton, {flex: 0.1, alignSelf: 'flex-end'}]}
+              onPress={this.zoomIn.bind(this)}>
               <Text style={styles.flipText}> + </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.flipButton, { flex: 0.1, alignSelf: 'flex-end' }]}
-              onPress={this.zoomOut.bind(this)}
-            >
+              style={[styles.flipButton, {flex: 0.1, alignSelf: 'flex-end'}]}
+              onPress={this.zoomOut.bind(this)}>
               <Text style={styles.flipText}> - </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.flipButton, styles.picButton, { flex: 0.3, alignSelf: 'flex-end' }]}
-              onPress={this.takePicture.bind(this)}
-            >
+              style={[
+                styles.flipButton,
+                styles.picButton,
+                {flex: 0.3, alignSelf: 'flex-end'},
+              ]}
+              onPress={this.takePicture.bind(this)}>
               <Text style={styles.flipText}> SNAP </Text>
             </TouchableOpacity>
           </View>
