@@ -1,3 +1,4 @@
+/* eslint-disable react/no-did-mount-set-state */
 /* eslint-disable react-native/no-inline-styles */
 
 import React from 'react';
@@ -31,6 +32,7 @@ const wbOrder = {
 
 export default class CameraScreen extends React.Component {
   state = {
+    incrementNo: 1,
     flash: 'off',
     zoom: 0,
     autoFocus: 'on',
@@ -46,6 +48,12 @@ export default class CameraScreen extends React.Component {
     whiteBalance: 'auto',
     ratio: '16:9',
   };
+
+  componentDidMount() {
+    this.setState({
+      incrementNo: this.props.route.params.startNumber,
+    });
+  }
 
   toggleFacing() {
     this.setState({
@@ -109,22 +117,26 @@ export default class CameraScreen extends React.Component {
     }
   };
 
+  getCurFileName() {
+    const {folderName, subFileName} = this.props.route.params;
+    const strIncrementNo = String(this.state.incrementNo).padStart(4, '0');
+    return `${folderName}-${subFileName}-${strIncrementNo}`;
+  }
+
   async savePicture(uri, exif) {
     // TODO: 폴더명는 현재 선택된 앨범명으로 처리, 파일명도 자동증가 처리
     const {folderName} = this.props.route.params;
-    let fileName = `${new Date().getTime()}.jpg`;
     const folderPath = `${RNFS.ExternalStorageDirectoryPath}/SeedShot/${folderName}`;
 
-    
     const todayDate = new Date();
     const todayYYYYMMDD =
       todayDate.getFullYear() +
       String(todayDate.getMonth() + 1).padStart(2, '0') +
       String(todayDate.getDate()).padStart(2, '0');
-
+    const fileName = this.getCurFileName();
     const res = await Marker.markText({
       src: uri,
-      text: `${folderName}/${new Date().getTime()} - ${todayYYYYMMDD}`,
+      text: `${fileName}    ${todayYYYYMMDD}`,
       X: 0,
       Y: 0,
       color: '#fff',
@@ -143,6 +155,10 @@ export default class CameraScreen extends React.Component {
 
     await RNFS.mkdir(folderPath);
     RNFS.moveFile(res, `${folderPath}/${fileName}`);
+
+    this.setState({
+      incrementNo: this.state.incrementNo + 1,
+    });
   }
 
   renderCamera() {
@@ -199,38 +215,33 @@ export default class CameraScreen extends React.Component {
             onPress={this.toggleWB.bind(this)}>
             <Text style={styles.flipText}> WB: {this.state.whiteBalance} </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.flipButton]}
+            onPress={this.zoomIn.bind(this)}>
+            <Text style={styles.flipText}> + </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.flipButton]}
+            onPress={this.zoomOut.bind(this)}>
+            <Text style={styles.flipText}> - </Text>
+          </TouchableOpacity>
         </View>
         <View style={{bottom: 0}}>
-          {this.state.zoom !== 0 && (
-            <Text style={[styles.flipText, styles.zoomText]}>
-              Zoom: {this.state.zoom}
-            </Text>
-          )}
+          <Text style={[styles.flipText, styles.zoomText]}>
+            {this.getCurFileName()}
+          </Text>
           <View
             style={{
-              height: 56,
+              height: 120,
+              marginBottom: 40,
               backgroundColor: 'transparent',
               flexDirection: 'row',
-              alignSelf: 'flex-end',
+              alignSelf: 'center',
             }}>
             <TouchableOpacity
-              style={[styles.flipButton, {flex: 0.1, alignSelf: 'flex-end'}]}
-              onPress={this.zoomIn.bind(this)}>
-              <Text style={styles.flipText}> + </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.flipButton, {flex: 0.1, alignSelf: 'flex-end'}]}
-              onPress={this.zoomOut.bind(this)}>
-              <Text style={styles.flipText}> - </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.flipButton,
-                styles.picButton,
-                {flex: 0.3, alignSelf: 'flex-end'},
-              ]}
+              style={[styles.flipButton, styles.picButton]}
               onPress={this.takePicture.bind(this)}>
-              <Text style={styles.flipText}> SNAP </Text>
+              <Text style={styles.flipText}></Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -250,8 +261,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   flipButton: {
-    flex: 0.3,
-    height: 40,
+    flex: 1,
+    height: 80,
     marginHorizontal: 2,
     marginBottom: 10,
     marginTop: 10,
@@ -277,11 +288,18 @@ const styles = StyleSheet.create({
   },
   zoomText: {
     position: 'absolute',
-    bottom: 70,
+    bottom: 10,
     zIndex: 2,
-    left: 2,
+    width: '100%',
+    fontSize: 20,
+    paddingLeft: 10,
+    paddingRight: 10,
+    textAlign: 'center',
   },
   picButton: {
-    backgroundColor: 'darkseagreen',
+    flex: 0.2,
+    backgroundColor: '#faa',
+    opacity: 0.5,
+    borderRadius: 40,
   },
 });

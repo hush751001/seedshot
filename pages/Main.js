@@ -1,3 +1,5 @@
+/* eslint-disable react/no-did-mount-set-state */
+/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import {
   View,
@@ -5,9 +7,11 @@ import {
   TouchableHighlight,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
+  TouchableWithoutFeedback,
+  FlatList,
   Modal,
   TextInput,
+  Dimensions,
 } from 'react-native';
 import RNFS from 'react-native-fs';
 import {PermissionsAndroid, Platform} from 'react-native';
@@ -46,18 +50,20 @@ class Main extends React.Component {
     folders: [],
     modalVisible: false,
     modalFileName: '',
+    modalSubFileName: '',
+    numColumns: 3,
   };
 
   handleOpenModal = () => {
     this.setState({
-      modalVisible: true
+      modalVisible: true,
     });
   };
 
   handleCloseModal = async (isPressedBackKey) => {
     if (isPressedBackKey !== true) {
       // 폴더 추가
-      if (this.state.modalFileName) {
+      if (this.state.modalFileName && this.state.modalSubFileName) {
         console.log(`makeFodler ${rootFolderPath}/${this.state.modalFileName}`);
         await RNFS.mkdir(`${rootFolderPath}/${this.state.modalFileName}`);
         const folders = await getPhotoFolders();
@@ -67,17 +73,25 @@ class Main extends React.Component {
 
         this.props.navigation.navigate('TakePicture', {
           folderName: this.state.modalFileName,
+          subFileName: this.state.modalSubFileName,
+          startNumber: 1,
         });
       }
     }
     this.setState({
-      modalVisible: false
+      modalVisible: false,
     });
   };
 
   handleModalFileNameChange = (text) => {
     this.setState({
-      modalFileName: text
+      modalFileName: text,
+    });
+  };
+
+  handleModalSubFileNameChange = (text) => {
+    this.setState({
+      modalSubFileName: text,
     });
   };
 
@@ -102,24 +116,61 @@ class Main extends React.Component {
     });
   }
 
+  handleClickItem(item) {
+    this.props.navigation.navigate('Detail', {
+      folderName: item.path,
+    });
+  }
+
+  renderItem = ({item}) => {
+    if (item.empty === true) {
+      return <View style={[styles.item, styles.itemInvisible]} />;
+    }
+    return (
+      <TouchableWithoutFeedback onPress={() => this.handleClickItem(item)}>
+        <View
+          style={[
+            styles.item,
+            {height: Dimensions.get('window').width / this.state.numColumns},
+          ]}
+          key={item.path}>
+          <Text>{item.name}</Text>
+        </View>
+      </TouchableWithoutFeedback>
+    );
+  };
+
+  formatRow = (data, numColumns) => {
+    const numberOfFullRows = Math.floor(data.length / numColumns);
+    let numberOfElementsLastRow = data.length - numberOfFullRows * numColumns;
+    while (
+      numberOfElementsLastRow !== numColumns &&
+      numberOfElementsLastRow !== 0
+    ) {
+      data.push({key: `blank-${numberOfElementsLastRow}`, empty: true});
+      numberOfElementsLastRow++;
+    }
+    return data;
+  };
+
   render() {
-    const {folders,modalVisible} = this.state;
+    const {folders, modalVisible, numColumns} = this.state;
     return (
       <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-        <ScrollView style={{backgroundColor: 'yellow', width: '100%'}}>
-          {folders.map((folder) => {
-            return (
-              <View style={styles.folderItem} key={folder.path}>
-                <Text>{folder.name}</Text>
-              </View>
-            );
-          })}
-        </ScrollView>
-        <View
-          style={{position: 'absolute', bottom: 0, height: 100, opacity: 0.3}}>
-          <TouchableOpacity
-            style={styles.btnTake}
-            onPress={this.handleOpenModal}>
+        <FlatList
+          style={{
+            backgroundColor: 'gray',
+            width: '100%',
+            height: '100%',
+            padding: 10,
+          }}
+          data={this.formatRow(folders, numColumns)}
+          renderItem={this.renderItem}
+          keyExtractor={(item) => item.path}
+          numColumns={numColumns}
+        />
+        <View style={styles.btnTake}>
+          <TouchableOpacity onPress={this.handleOpenModal}>
             <Text style={styles.btnTakeText}>사진 찍기</Text>
           </TouchableOpacity>
         </View>
@@ -131,28 +182,36 @@ class Main extends React.Component {
             visible={modalVisible}
             onRequestClose={() => {
               this.handleCloseModal(true);
-            }}
-          >
+            }}>
             <View style={styles.centeredView}>
               <View style={styles.modalView}>
                 <View style={styles.field}>
                   <Text style={styles.modalText}>파일명</Text>
-                  <TextInput style={styles.textinput} value={this.state.modalFileName} onChangeText={this.handleModalFileNameChange} />
+                  <TextInput
+                    style={styles.textinput}
+                    value={this.state.modalFileName}
+                    onChangeText={this.handleModalFileNameChange}
+                  />
                 </View>
                 <View style={styles.field}>
                   <Text style={styles.modalText}>하위명</Text>
-                  <TextInput style={styles.textinput}></TextInput>
+                  <TextInput
+                    keyboardType="decimal-pad"
+                    maxLength={4}
+                    style={styles.textinput}
+                    value={this.state.modalSubFileName}
+                    onChangeText={this.handleModalSubFileNameChange}
+                  />
                 </View>
                 <View style={styles.field}>
                   <Text style={styles.modalText}>자동명</Text>
-                  <TextInput style={styles.textinput}></TextInput>
+                  <TextInput style={styles.textinput} />
                 </View>
 
                 <TouchableHighlight
-                  style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
-                  onPress={this.handleCloseModal}
-                >
-                  <Text style={styles.textStyle}>추가</Text>
+                  style={{...styles.openButton, backgroundColor: '#2196F3'}}
+                  onPress={this.handleCloseModal}>
+                  <Text style={styles.textStyle}>사진찍기 시작</Text>
                 </TouchableHighlight>
               </View>
             </View>
@@ -174,19 +233,23 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   btnTake: {
+    position: 'absolute',
+    bottom: 50,
+    opacity: 0.3,
     backgroundColor: 'red',
   },
   btnTakeText: {
-    width: 100,
-    height: 50,
     textAlign: 'center',
     textAlignVertical: 'center',
+    padding: 30,
   },
-  folderItem: {
-    backgroundColor: 'red',
-    padding: 10,
-    borderBottomColor: 'black',
-    borderBottomWidth: 2,
+  item: {
+    backgroundColor: '#ff3',
+    flex: 1,
+    margin: 1,
+  },
+  itemInvisible: {
+    backgroundColor: 'transparent',
   },
   centeredView: {
     flex: 1,
@@ -219,6 +282,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
+    padding: 10,
   },
   modalText: {
     textAlignVertical: 'center',
