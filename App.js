@@ -8,7 +8,6 @@
 
 import * as React from 'react';
 import RNFS from 'react-native-fs';
-import {View, Text, Button} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import TakePicture from './pages/TakePicture';
@@ -30,7 +29,15 @@ function App() {
           options={{title: '메인화면'}}
         />
         <Stack.Screen name="Detail" component={Detail} />
-        <Stack.Screen name="TakePicture" component={TakePicture} />
+        <Stack.Screen
+          name="TakePicture"
+          component={TakePicture}
+          options={{
+            header: () => {
+              return null;
+            },
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

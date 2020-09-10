@@ -16,6 +16,7 @@ import {
 import RNFS from 'react-native-fs';
 import {PermissionsAndroid, Platform} from 'react-native';
 import {rootFolderPath} from '../App';
+import Orientation from 'react-native-orientation';
 
 async function hasAndroidPermission() {
   const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
@@ -107,6 +108,10 @@ class Main extends React.Component {
           </TouchableHighlight>
         </View>
       ),
+    });
+
+    const unsubscribe = navigation.addListener('focus', () => {
+      Orientation.lockToPortrait();
     });
 
     const folders = await getPhotoFolders();

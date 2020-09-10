@@ -1,3 +1,4 @@
+/* eslint-disable no-dupe-class-members */
 /* eslint-disable react/no-did-mount-set-state */
 /* eslint-disable react-native/no-inline-styles */
 
@@ -13,6 +14,7 @@ import {
 import {RNCamera} from 'react-native-camera';
 import Marker from 'react-native-image-marker';
 import RNFS from 'react-native-fs';
+import Orientation from 'react-native-orientation';
 
 const flashModeOrder = {
   off: 'on',
@@ -30,8 +32,9 @@ const wbOrder = {
   incandescent: 'auto',
 };
 
-export default class CameraScreen extends React.Component {
+export default class TakePicture extends React.Component {
   state = {
+    orientation: 'portrait',
     incrementNo: 1,
     flash: 'off',
     zoom: 0,
@@ -50,10 +53,30 @@ export default class CameraScreen extends React.Component {
   };
 
   componentDidMount() {
+    Orientation.unlockAllOrientations();
     this.setState({
       incrementNo: this.props.route.params.startNumber,
     });
+
+    Dimensions.addEventListener('change', this._orientationDidChange);
   }
+
+  componentWillUnmount() {
+    Dimensions.removeEventListener('change', this._orientationDidChange);
+  }
+
+  _orientationDidChange = ({window: {width, height}}) => {
+    const orientation = width > height ? 'LANDSCAPE' : 'PORTRAIT';
+    if (orientation === 'LANDSCAPE') {
+      this.setState({
+        orientation: 'landscape',
+      });
+    } else {
+      this.setState({
+        orientation: 'portrait',
+      });
+    }
+  };
 
   toggleFacing() {
     this.setState({
@@ -166,6 +189,18 @@ export default class CameraScreen extends React.Component {
       top: this.state.autoFocusPoint.drawRectPosition.y - 32,
       left: this.state.autoFocusPoint.drawRectPosition.x - 32,
     };
+    const flipButtonStyles = [styles.flipButton];
+    if (this.state.orientation === 'landscape') {
+      flipButtonStyles.push(styles.flipLandscapeButton);
+    }
+    const curFileNameStyles = [styles.flipText, styles.zoomText];
+    if (this.state.orientation === 'landscape') {
+      curFileNameStyles.push(styles.zoomLandscapeText);
+    }
+    const picButtonWrapperStyles = [styles.picButtonWrapper];
+    if (this.state.orientation === 'landscape') {
+      picButtonWrapperStyles.push(styles.picButtonLandscapeWrapper);
+    }
     return (
       <RNCamera
         ref={(ref) => {
@@ -186,64 +221,49 @@ export default class CameraScreen extends React.Component {
           buttonPositive: 'Ok',
           buttonNegative: 'Cancel',
         }}>
+        <View style={styles.flipButtons}>
+          <TouchableOpacity
+            style={flipButtonStyles}
+            onPress={this.toggleFacing.bind(this)}>
+            <Text style={styles.flipText}> FLIP </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={flipButtonStyles}
+            onPress={this.toggleFlash.bind(this)}>
+            <Text style={styles.flipText}> FLASH: {this.state.flash} </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={flipButtonStyles}
+            onPress={this.toggleWB.bind(this)}>
+            <Text style={styles.flipText}> WB: {this.state.whiteBalance} </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={flipButtonStyles}
+            onPress={this.zoomIn.bind(this)}>
+            <Text style={styles.flipText}> + </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={flipButtonStyles}
+            onPress={this.zoomOut.bind(this)}>
+            <Text style={styles.flipText}> - </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={StyleSheet.absoluteFill}>
+          <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
+            <Text style={curFileNameStyles}>{this.getCurFileName()}</Text>
+            <View style={picButtonWrapperStyles}>
+              <TouchableOpacity
+                style={[styles.flipButton, styles.picButton]}
+                onPress={this.takePicture.bind(this)}
+              />
+            </View>
+          </View>
+        </View>
         <View style={StyleSheet.absoluteFill}>
           <View style={[styles.autoFocusBox, drawFocusRingPosition]} />
           <TouchableWithoutFeedback onPress={this.touchToFocus.bind(this)}>
             <View style={{flex: 1}} />
           </TouchableWithoutFeedback>
-        </View>
-        <View
-          style={{
-            flex: 0.5,
-            height: 72,
-            backgroundColor: 'transparent',
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-          }}>
-          <TouchableOpacity
-            style={styles.flipButton}
-            onPress={this.toggleFacing.bind(this)}>
-            <Text style={styles.flipText}> FLIP </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.flipButton}
-            onPress={this.toggleFlash.bind(this)}>
-            <Text style={styles.flipText}> FLASH: {this.state.flash} </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.flipButton}
-            onPress={this.toggleWB.bind(this)}>
-            <Text style={styles.flipText}> WB: {this.state.whiteBalance} </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.flipButton]}
-            onPress={this.zoomIn.bind(this)}>
-            <Text style={styles.flipText}> + </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.flipButton]}
-            onPress={this.zoomOut.bind(this)}>
-            <Text style={styles.flipText}> - </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={{bottom: 0}}>
-          <Text style={[styles.flipText, styles.zoomText]}>
-            {this.getCurFileName()}
-          </Text>
-          <View
-            style={{
-              height: 120,
-              marginBottom: 40,
-              backgroundColor: 'transparent',
-              flexDirection: 'row',
-              alignSelf: 'center',
-            }}>
-            <TouchableOpacity
-              style={[styles.flipButton, styles.picButton]}
-              onPress={this.takePicture.bind(this)}>
-              <Text style={styles.flipText}></Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </RNCamera>
     );
@@ -257,15 +277,23 @@ export default class CameraScreen extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 10,
     backgroundColor: '#000',
+  },
+  flipButtons: {
+    flex: 1,
+    height: 72,
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  flipLandscapeButton: {
+    height: 30,
   },
   flipButton: {
     flex: 1,
-    height: 80,
+    height: 70,
     marginHorizontal: 2,
-    marginBottom: 10,
-    marginTop: 10,
+    marginVertical: 10,
     borderRadius: 8,
     borderColor: 'white',
     borderWidth: 1,
@@ -296,10 +324,27 @@ const styles = StyleSheet.create({
     paddingRight: 10,
     textAlign: 'center',
   },
+  zoomLandscapeText: {
+    textAlign: 'left',
+  },
+  picButtonWrapper: {
+    height: 100,
+    marginBottom: 80,
+    width: 100,
+    backgroundColor: 'transparent',
+    alignSelf: 'center',
+  },
+  picButtonLandscapeWrapper: {
+    alignSelf: 'flex-end',
+    marginRight: 20,
+  },
   picButton: {
-    flex: 0.2,
+    flex: 1,
     backgroundColor: '#faa',
     opacity: 0.5,
-    borderRadius: 40,
+    borderRadius: 50,
+    padding: 0,
+    marginHorizontal: 0,
+    marginVertical: 0,
   },
 });

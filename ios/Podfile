@@ -12,6 +12,8 @@ target 'SeedShot' do
 
   pod 'RNFS', :path => '../node_modules/react-native-fs'
 
+  pod 'react-native-orientation', :path => '../node_modules/react-native-orientation'
+
   target 'SeedShotTests' do
     inherit! :complete
     # Pods for testing
