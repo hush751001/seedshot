@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import RNFS from 'react-native-fs';
+import ImageView from 'react-native-image-viewing';
 
 async function getPhotoFiles(folderName) {
   // 폴더 목록 확인
@@ -28,6 +29,7 @@ class Detail extends React.Component {
   state = {
     files: [],
     numColumns: 3,
+    visibleImageView: false,
   };
 
   async componentDidMount() {
@@ -39,17 +41,20 @@ class Detail extends React.Component {
     });
   }
 
-  handleClickItem(item) {
-    console.log(item);
-    // sub화면으로 이동
+  handleClickItem(item, index) {
+    this.setState({
+      visibleImageView: true,
+      imageSelectedIndex: index,
+    });
   }
 
-  renderItem = ({item}) => {
+  renderItem = ({item, index}) => {
     if (item.empty === true) {
       return <View style={[styles.item, styles.itemInvisible]} />;
     }
     return (
-      <TouchableWithoutFeedback onPress={() => this.handleClickItem(item)}>
+      <TouchableWithoutFeedback
+        onPress={() => this.handleClickItem(item, index)}>
         <View
           style={[
             styles.item,
@@ -78,16 +83,41 @@ class Detail extends React.Component {
     return data;
   };
 
+  handleCloseImageView = () => {
+    this.setState({
+      visibleImageView: false,
+    });
+  };
+
   render() {
-    const {files, numColumns} = this.state;
+    const {
+      files,
+      numColumns,
+      visibleImageView,
+      imageSelectedIndex,
+    } = this.state;
+
+    const images = files
+      .filter((item) => !!item.path)
+      .map((item) => ({uri: 'file://' + item.path}));
+
     return (
-      <FlatList
-        style={styles.container}
-        data={this.formatRow(files, numColumns)}
-        renderItem={this.renderItem}
-        keyExtractor={(item) => item.path}
-        numColumns={numColumns}
-      />
+      <>
+        <ImageView
+          images={images}
+          imageIndex={imageSelectedIndex}
+          visible={visibleImageView}
+          onRequestClose={this.handleCloseImageView}
+          swipeToCloseEnabled={false}
+        />
+        <FlatList
+          style={styles.container}
+          data={this.formatRow(files, numColumns)}
+          renderItem={this.renderItem}
+          keyExtractor={(item) => item.path}
+          numColumns={numColumns}
+        />
+      </>
     );
   }
 }
