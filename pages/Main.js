@@ -164,9 +164,8 @@ class Main extends React.Component {
       <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
         <FlatList
           style={{
-            backgroundColor: 'gray',
+            backgroundColor: 'lightgray',
             width: '100%',
-            height: '100%',
             padding: 10,
           }}
           data={this.formatRow(folders, numColumns)}
@@ -239,19 +238,20 @@ const styles = StyleSheet.create({
   },
   btnTake: {
     position: 'absolute',
-    bottom: 50,
+    bottom: 60,
     opacity: 0.3,
     backgroundColor: 'red',
+    borderRadius: 30,
   },
   btnTakeText: {
     textAlign: 'center',
     textAlignVertical: 'center',
-    padding: 30,
+    padding: 20,
   },
   item: {
     backgroundColor: '#ff3',
     flex: 1,
-    margin: 1,
+    margin: 2,
   },
   itemInvisible: {
     backgroundColor: 'transparent',

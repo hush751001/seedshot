@@ -95,23 +95,15 @@ class Detail extends React.Component {
 //
 
 const styles = StyleSheet.create({
-  headerButtons: {
-    height: 50,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
   container: {
-    backgroundColor: 'gray',
+    backgroundColor: 'lightgray',
     padding: 10,
     flex: 1,
-    marginVertical: 20,
   },
   item: {
-    backgroundColor: '#ff3',
+    backgroundColor: '#fff',
     flex: 1,
-    margin: 1,
+    margin: 2,
   },
   itemInvisible: {
     backgroundColor: 'transparent',

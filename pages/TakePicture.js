@@ -177,7 +177,7 @@ export default class TakePicture extends React.Component {
     console.log(res);
 
     await RNFS.mkdir(folderPath);
-    RNFS.moveFile(res, `${folderPath}/${fileName}`);
+    RNFS.moveFile(res, `${folderPath}/${fileName}.jpg`);
 
     this.setState({
       incrementNo: this.state.incrementNo + 1,
@@ -200,6 +200,9 @@ export default class TakePicture extends React.Component {
     const picButtonWrapperStyles = [styles.picButtonWrapper];
     if (this.state.orientation === 'landscape') {
       picButtonWrapperStyles.push(styles.picButtonLandscapeWrapper);
+      picButtonWrapperStyles.push({
+        marginBottom: (Dimensions.get('window').height - 100) / 2,
+      });
     }
     return (
       <RNCamera
@@ -248,15 +251,13 @@ export default class TakePicture extends React.Component {
             <Text style={styles.flipText}> - </Text>
           </TouchableOpacity>
         </View>
-        <View style={StyleSheet.absoluteFill}>
-          <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
-            <Text style={curFileNameStyles}>{this.getCurFileName()}</Text>
-            <View style={picButtonWrapperStyles}>
-              <TouchableOpacity
-                style={[styles.flipButton, styles.picButton]}
-                onPress={this.takePicture.bind(this)}
-              />
-            </View>
+        <View style={{position: 'absolute', bottom: 0, width: '100%'}}>
+          <Text style={curFileNameStyles}>{this.getCurFileName()}</Text>
+          <View style={picButtonWrapperStyles}>
+            <TouchableOpacity
+              style={[styles.flipButton, styles.picButton]}
+              onPress={this.takePicture.bind(this)}
+            />
           </View>
         </View>
         <View style={StyleSheet.absoluteFill}>
@@ -280,11 +281,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   flipButtons: {
-    flex: 1,
-    height: 72,
+    flexBasis: 100,
     backgroundColor: 'transparent',
     flexDirection: 'row',
     justifyContent: 'space-around',
+    zIndex: 100,
   },
   flipLandscapeButton: {
     height: 30,
@@ -333,6 +334,7 @@ const styles = StyleSheet.create({
     width: 100,
     backgroundColor: 'transparent',
     alignSelf: 'center',
+    zIndex: 100,
   },
   picButtonLandscapeWrapper: {
     alignSelf: 'flex-end',
